@@ -36,7 +36,9 @@ func NewOneShotConfig() (*OneShotConfig, error) {
     config := OneShotConfig{};
     value, found := os.LookupEnv("ONESHOT_COMPOSE_FILE");
     if (!found) {
-        return nil, &OneShotError{"No environment variable ONESHOT_COMPOSE_FILE found"}
+        return nil, &OneShotError{
+            "No environment variable ONESHOT_COMPOSE_FILE found",
+        }
     }
     config.ComposeFiles = strings.Split(value, ":")
     value, found = os.LookupEnv("ONESHOT_CRONTAB_FILE");
@@ -48,7 +50,8 @@ func NewOneShotConfig() (*OneShotConfig, error) {
 }
 
 func NewOneShot() (*OneShot, error) {
-	cli, err := client.NewClientWithOpts(client.WithVersion("1.39"), client.FromEnv)
+	cli, err := client.NewClientWithOpts(
+        client.WithVersion("1.39"), client.FromEnv)
 	config, err := NewOneShotConfig();
 	if err != nil {
 		return nil, err
@@ -57,8 +60,10 @@ func NewOneShot() (*OneShot, error) {
     return &oneshot, nil
 }
 
-func (oneshot *OneShot) CleanUpSwarmJobs(ctx context.Context, filter filters.Args) error {
-    services, err := oneshot.Client.ServiceList(ctx, types.ServiceListOptions{Filters: filter})
+func (oneshot *OneShot) CleanUpSwarmJobs(ctx context.Context,
+                                         filter filters.Args) error {
+    services, err := oneshot.Client.ServiceList(ctx,
+        types.ServiceListOptions{Filters: filter})
 	if err != nil {
 		panic(err)
 	}
@@ -68,15 +73,18 @@ func (oneshot *OneShot) CleanUpSwarmJobs(ctx context.Context, filter filters.Arg
             panic(err)
         }
         if shouldDelete {
-            oneshot.DeleteStoppedStack(ctx, service.Spec.Labels["com.docker.stack.namespace"])
+            oneshot.DeleteStoppedStack(ctx,
+                service.Spec.Labels["com.docker.stack.namespace"])
         }
     }
     return nil
 }
 
-func (oneshot *OneShot) ShouldDeleteService(ctx context.Context, service swarm.Service) (bool, error) {
+func (oneshot *OneShot) ShouldDeleteService(ctx context.Context,
+                                        service swarm.Service) (bool, error) {
     filter := filters.NewArgs(filters.KeyValuePair{"service", service.ID})
-    tasks, err := oneshot.Client.TaskList(ctx, types.TaskListOptions{Filters: filter})
+    tasks, err := oneshot.Client.TaskList(
+        ctx, types.TaskListOptions{Filters: filter})
 	if err != nil {
 		panic(err)
 	}
@@ -91,7 +99,8 @@ func (oneshot *OneShot) ShouldDeleteService(ctx context.Context, service swarm.S
             fmt.Printf("%s running\n", task.ID)
             foundRunning = true
         default:
-            fmt.Printf("Unexpected state for %s: %s\n", task.ID, task.Status.State)
+            fmt.Printf("Unexpected state for %s: %s\n", task.ID,
+                task.Status.State)
         }
     }
     return !foundRunning, nil
