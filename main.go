@@ -28,6 +28,7 @@ func main() {
     }()
 
     oneshot.Start()
+    log.Printf("Cron process started\n")
     <-done
     oneshot.Stop()
 }
