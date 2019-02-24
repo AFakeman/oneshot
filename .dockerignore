@@ -1,2 +1,5 @@
-/Dockerfile
 /.dockerignore
+/Dockerfile
+/crontab.example
+/docker-compose.yml
+/test-stack.yml

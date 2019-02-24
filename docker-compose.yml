@@ -1,0 +1,13 @@
+version: "3.6"
+
+services:
+  oneshot:
+    image: afakeman/oneshot
+    build:
+      context: .
+    environment:
+      ONESHOT_COMPOSE_FILE: /etc/oneshot/compose.yml
+    volumes:
+      - "./crontab.example:/etc/oneshot/crontab"
+      - "./test-stack.yml:/etc/oneshot/compose.yml"
+      - "/var/run/docker.sock:/var/run/docker.sock"
