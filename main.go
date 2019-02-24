@@ -1,7 +1,7 @@
 package main
 
 import (
-	"context"
+    "context"
 
     "github.com/docker/docker/api/types/filters"
 
@@ -11,14 +11,19 @@ import (
 
 func main() {
     oneshot, err := oneshot.NewOneShot();
-	if err != nil {
-		panic(err)
-	}
+    if err != nil {
+        panic(err)
+    }
 
     filter := filters.NewArgs(filters.KeyValuePair{"label", "wd.cron.job"})
 
-	err = oneshot.CleanUpSwarmJobs(context.Background(), filter)
-	if err != nil {
-		panic(err)
-	}
+    err = oneshot.CleanUpSwarmJobs(context.Background())
+    if err != nil {
+        panic(err)
+    }
+
+    err = oneshot.StartOneShotStack("hello", "test-stack")
+    if err != nil {
+        panic(err)
+    }
 }
