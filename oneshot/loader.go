@@ -2,7 +2,6 @@ package oneshot
 
 import (
     "io/ioutil"
-    "os"
     "path/filepath"
     "strings"
 
@@ -12,8 +11,8 @@ import (
     "github.com/docker/cli/cli/compose/loader"
 )
 
-func loadComposefile(filenames []string) (*types.Config, error) {
-    details, err := getConfigDetails(filenames);
+func loadComposefile(filenames []string, env map[string]string) (*types.Config, error) {
+    details, err := getConfigDetails(filenames, env);
     if err != nil {
         return nil, errors.Wrap(err, "Error parsing config")
     }
@@ -27,7 +26,7 @@ func loadComposefile(filenames []string) (*types.Config, error) {
     return config, nil
 }
 
-func getConfigDetails(filenames []string) (types.ConfigDetails, error) {
+func getConfigDetails(filenames []string, env map[string]string) (types.ConfigDetails, error) {
     var details types.ConfigDetails
 
     absPath, err := filepath.Abs(filenames[0])
@@ -44,8 +43,8 @@ func getConfigDetails(filenames []string) (types.ConfigDetails, error) {
     details.ConfigFiles = configs
 
     details.Version = schema.Version(details.ConfigFiles[0].Config)
-    details.Environment, err = buildEnvironment(os.Environ())
-    return details, err
+    details.Environment = env
+    return details, nil
 }
 
 // These three functions are taken from loader/loader.go

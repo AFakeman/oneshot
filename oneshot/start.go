@@ -17,7 +17,10 @@ import (
 )
 
 func (oneshot *OneShot) StartOneShotStack(cmd string) (error) {
-    config, err := loadComposefile(oneshot.Config.ComposeFiles)
+    env := map[string]string{
+        "COMMAND": cmd,
+    }
+    config, err := loadComposefile(oneshot.Config.ComposeFiles, env)
     if err != nil {
         return err
     }
