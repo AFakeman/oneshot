@@ -2,7 +2,7 @@ package oneshot
 
 import (
     "context"
-    "fmt"
+    "log"
     "os/exec"
 
     "github.com/docker/docker/api/types"
@@ -50,23 +50,18 @@ func (oneshot *OneShot) shouldDeleteService(ctx context.Context,
     for _, task := range tasks {
         switch task.Status.State {
         case "failed":
-            fmt.Printf("%s failed\n", task.ID)
-        case "finished":
-            fmt.Printf("%s finished\n", task.ID)
-        case "running":
-            fmt.Printf("%s running\n", task.ID)
-            foundRunning = true
+            log.Printf("Task %s failed\n", task.ID)
+        case "complete":
         default:
-            fmt.Printf("Unexpected state for %s: %s\n", task.ID,
-                task.Status.State)
             foundRunning = true
+            log.Printf("Task %s %s\n", task.ID, task.Status.State)
         }
     }
     return !foundRunning, nil
 }
 
 func (*OneShot) deleteStoppedStack(ctx context.Context, stack string) (error) {
-    fmt.Printf("Got asked to delete stack %s\n", stack)
+    log.Printf("Cleaning up stack %s\n", stack)
     cmd := exec.Command("docker", "stack", "rm", stack)
     err := cmd.Run()
     if err != nil {

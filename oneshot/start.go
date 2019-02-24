@@ -1,15 +1,19 @@
 package oneshot
 
 import (
+    "fmt"
     "io"
     "os/exec"
+    "regexp"
+    "strings"
+    "time"
 
     "github.com/pkg/errors"
     "github.com/docker/cli/cli/compose/types"
     "github.com/go-yaml/yaml"
 )
 
-func (oneshot *OneShot) StartOneShotStack(cmd string, stack string) (error) {
+func (oneshot *OneShot) StartOneShotStack(cmd string) (error) {
     config, err := loadComposefile(oneshot.Config.ComposeFiles)
     if err != nil {
         return err
@@ -24,6 +28,8 @@ func (oneshot *OneShot) StartOneShotStack(cmd string, stack string) (error) {
     if err != nil {
         return errors.Wrap(err, "Couldn't dump modified config")
     }
+
+    stack := oneshot.stackNameForCommand(cmd, time.Now())
 
     command := exec.Command("docker", "stack", "deploy", "-c", "-", stack)
 
@@ -43,6 +49,17 @@ func (oneshot *OneShot) StartOneShotStack(cmd string, stack string) (error) {
     }
 
     return nil
+}
+
+var notAllowedCharactersRegex, _ = regexp.Compile("[^a-zA-Z0-9\\.-_]")
+
+func (oneshot *OneShot) stackNameForCommand(cmd string, t time.Time) (string) {
+    cmd_san := strings.Replace(cmd, " ", "_", -1)
+    cmd_san = strings.Replace(cmd_san, "/", ".", -1)
+    cmd_san = notAllowedCharactersRegex.ReplaceAllString(cmd, "")
+    time_part := t.Format("2006-02-01T15-04-05")
+    name := fmt.Sprintf("cron_%s_%s", cmd_san, time_part)
+    return name
 }
 
 func (oneshot *OneShot) modifyStackConfig(config *types.Config, cmd string) (error) {

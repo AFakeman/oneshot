@@ -1,9 +1,10 @@
 package main
 
 import (
-    "context"
-
-    "github.com/docker/docker/api/types/filters"
+    "log"
+    "os"
+    "os/signal"
+    "syscall"
 
     "github.com/afakeman/oneshot/oneshot"
 )
@@ -15,15 +16,18 @@ func main() {
         panic(err)
     }
 
-    filter := filters.NewArgs(filters.KeyValuePair{"label", "wd.cron.job"})
+    sigs := make(chan os.Signal, 1)
+    done := make(chan bool, 1)
 
-    err = oneshot.CleanUpSwarmJobs(context.Background())
-    if err != nil {
-        panic(err)
-    }
+    signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-    err = oneshot.StartOneShotStack("hello", "test-stack")
-    if err != nil {
-        panic(err)
-    }
+    go func() {
+        sig := <-sigs
+        log.Printf("Received %s, shutting down...\n", sig)
+        done <- true
+    }()
+
+    oneshot.Start()
+    <-done
+    oneshot.Stop()
 }
