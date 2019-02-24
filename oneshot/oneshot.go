@@ -86,7 +86,7 @@ func NewOneShot() (*OneShot, error) {
             if err != nil {
                 log.Printf("Could not deploy a stack: %s\n", err)
             } else {
-                log.Printf("Started a job for command '%s'", command)
+                log.Printf("Started a job for command '%s'", command.Command)
             }
         })
     }

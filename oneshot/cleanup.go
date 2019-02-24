@@ -18,7 +18,7 @@ func (oneshot *OneShot) CleanUpSwarmJobs(ctx context.Context) error {
         panic(err)
     }
     for _, service := range services {
-        shouldDelete, err := oneshot.shouldDeleteService(ctx, service)
+        shouldDelete, err := oneshot.serviceIsNotFinished(ctx, service)
         if err != nil {
             panic(err)
         }
@@ -38,13 +38,13 @@ func (oneshot *OneShot) filterForCleanup() filters.Args {
         filters.KeyValuePair{"label", oneshot.Config.SelectorLabel})
 }
 
-func (oneshot *OneShot) shouldDeleteService(ctx context.Context,
+func (oneshot *OneShot) serviceIsNotFinished(ctx context.Context,
                                         service swarm.Service) (bool, error) {
     filter := filters.NewArgs(filters.KeyValuePair{"service", service.ID})
     tasks, err := oneshot.Client.TaskList(
         ctx, types.TaskListOptions{Filters: filter})
     if err != nil {
-        panic(err)
+        return false, err
     }
     foundRunning := false
     for _, task := range tasks {
@@ -54,7 +54,6 @@ func (oneshot *OneShot) shouldDeleteService(ctx context.Context,
         case "complete":
         default:
             foundRunning = true
-            log.Printf("Task %s %s\n", task.ID, task.Status.State)
         }
     }
     return !foundRunning, nil
