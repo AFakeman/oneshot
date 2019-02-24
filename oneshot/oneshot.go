@@ -22,6 +22,7 @@ type OneShotConfig struct {
     ComposeFiles []string
     CrontabFile string
     SelectorLabel string
+    CleanupTimespec string
 }
 
 type OneShotError struct {
@@ -33,7 +34,11 @@ func (err *OneShotError) Error() string {
 }
 
 func NewOneShotConfig() (*OneShotConfig, error) {
-    config := OneShotConfig{};
+    config := OneShotConfig{
+        CrontabFile: "/etc/oneshot/crontab",
+        SelectorLabel: "com.cron.job",
+        CleanupTimespec: "*/5 * * * *",
+    };
     value, found := os.LookupEnv("ONESHOT_COMPOSE_FILE");
     if (!found) {
         return nil, &OneShotError{
@@ -43,16 +48,14 @@ func NewOneShotConfig() (*OneShotConfig, error) {
     config.ComposeFiles = strings.Split(value, ":")
 
     value, found = os.LookupEnv("ONESHOT_CRONTAB_FILE");
-    if (!found) {
-        value = "/etc/oneshot/crontab"
+    if (found) {
+        config.CrontabFile = value;
     }
-    config.CrontabFile = value;
 
     value, found = os.LookupEnv("ONESHOT_SELECTOR_LABEL");
-    if (!found) {
-        value = "wd.cron.job"
+    if (found) {
+        config.SelectorLabel = value;
     }
-    config.SelectorLabel = value;
 
     return &config, nil;
 }
@@ -68,7 +71,7 @@ func NewOneShot() (*OneShot, error) {
     oneshot := OneShot{Config: config, Client: cli, Cron: cron.New()}
     commands, err := cronparse.ReadCrontab(oneshot.Config.CrontabFile)
 
-    oneshot.Cron.AddFunc("* * * * *", func() {
+    oneshot.Cron.AddFunc(oneshot.Config.CleanupTimespec, func() {
         log.Printf("Starting cleanup...\n")
         err := oneshot.CleanUpSwarmJobs(context.Background())
         if err != nil {
